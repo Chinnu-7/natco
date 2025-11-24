@@ -1,2 +1,20 @@
-# Natco-Dashboard
-Natco School Analytics Dashboard provides grade-wise and district-wise insights on student registration, participation, and subject performance. It visualizes trends using charts, helping schools identify strengths, gaps, and improvement areas for better academic planning.
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
+
+# Run and deploy your AI Studio app
+
+This contains everything you need to run your app locally.
+
+View your app in AI Studio: https://ai.studio/apps/drive/1VHGxcjXvDIzozQM0HKl4Easkk5yOgHHQ
+
+## Run Locally
+
+**Prerequisites:**  Node.js
+
+
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
