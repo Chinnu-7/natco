@@ -48,9 +48,9 @@ const App: React.FC = () => {
                 district: row[2],
                 loginId: String(row[3]),
                 studentName: row[4],
-                englishLevel: row[5],
+                englishLevel: row[7],
                 mathLevel: row[6],
-                grade: row[7]
+                grade: row[5]
               }));
 
             setAllStudentDetails(mappedData);
