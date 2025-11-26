@@ -25,7 +25,7 @@ export const StudentDetailsTable: React.FC<StudentDetailsTableProps> = ({ studen
   }, [students]);
 
   const uniqueSchools = useMemo(() => {
-    const filtered = students.filter(s => 
+    const filtered = students.filter(s =>
       localDistrictFilter === 'all' || s.district === localDistrictFilter
     );
     const schools = Array.from(new Set(filtered.map(s => s.schoolName)));
@@ -33,7 +33,7 @@ export const StudentDetailsTable: React.FC<StudentDetailsTableProps> = ({ studen
   }, [students, localDistrictFilter]);
 
   const uniqueGrades = useMemo(() => {
-    const filtered = students.filter(s => 
+    const filtered = students.filter(s =>
       (localDistrictFilter === 'all' || s.district === localDistrictFilter) &&
       (localSchoolFilter === 'all' || s.schoolName === localSchoolFilter)
     );
@@ -51,10 +51,10 @@ export const StudentDetailsTable: React.FC<StudentDetailsTableProps> = ({ studen
       const districtMatch = localDistrictFilter === 'all' || s.district === localDistrictFilter;
       const schoolMatch = localSchoolFilter === 'all' || s.schoolName === localSchoolFilter;
       const gradeMatch = localGradeFilter === 'all' || s.grade === localGradeFilter;
-      const searchMatch = searchTerm === '' || 
+      const searchMatch = searchTerm === '' ||
         s.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.loginId.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       return districtMatch && schoolMatch && gradeMatch && searchMatch;
     });
   }, [students, localDistrictFilter, localSchoolFilter, localGradeFilter, searchTerm]);
@@ -65,10 +65,10 @@ export const StudentDetailsTable: React.FC<StudentDetailsTableProps> = ({ studen
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredStudents.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [filteredStudents, currentPage]);
-  
+
   const handlePageChange = (page: number) => {
     if (page > 0 && page <= totalPages) {
-        setCurrentPage(page);
+      setCurrentPage(page);
     }
   }
 
@@ -127,7 +127,7 @@ export const StudentDetailsTable: React.FC<StudentDetailsTableProps> = ({ studen
     // Create worksheet data
     const worksheetData = [headers, ...rows];
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-    
+
     // Set column widths
     worksheet['!cols'] = [
       { wch: 15 },
@@ -171,7 +171,7 @@ export const StudentDetailsTable: React.FC<StudentDetailsTableProps> = ({ studen
         </div>
 
         {/* Filters Row */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">District</label>
             <select
@@ -243,9 +243,9 @@ export const StudentDetailsTable: React.FC<StudentDetailsTableProps> = ({ studen
           <thead className="bg-gray-50">
             <tr>
               {['District', 'School Id', 'School Name', 'LoginId', 'Student Name', 'Grade', 'English Level', 'Math Level'].map(header => (
-                 <th key={header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {header}
-                 </th>
+                <th key={header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {header}
+                </th>
               ))}
             </tr>
           </thead>
@@ -265,30 +265,30 @@ export const StudentDetailsTable: React.FC<StudentDetailsTableProps> = ({ studen
           </tbody>
         </table>
         {paginatedStudents.length === 0 && (
-            <div className="text-center py-8 text-gray-500">No students found.</div>
+          <div className="text-center py-8 text-gray-500">No students found.</div>
         )}
       </div>
       {totalPages > 1 && (
         <div className="mt-4 flex justify-between items-center">
-            <span className="text-sm text-gray-700">
-                Page {currentPage} of {totalPages}
-            </span>
-            <div className="flex gap-2">
-                <button 
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    Previous
-                </button>
-                <button 
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    Next
-                </button>
-            </div>
+          <span className="text-sm text-gray-700">
+            Page {currentPage} of {totalPages}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
     </div>

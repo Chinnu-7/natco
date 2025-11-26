@@ -141,7 +141,7 @@ const App: React.FC = () => {
     }
 
     // Grade Wise Participation
-    const gradeWiseParticipation: GradeWiseParticipation[] = [1, 2, 3, 4, 5, 6, 7].map(gNum => {
+    const gradeWiseParticipation: GradeWiseParticipation[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(gNum => {
       const gradeKey = `Grade ${gNum}`;
 
       // Check if this grade is selected (or if 'all' is selected)
@@ -165,17 +165,15 @@ const App: React.FC = () => {
 
       // Filter registrationData based on district and school
       const relevantData = registrationData.filter(item => {
+        if (item.schoolName === 'Total') return false;
         if (filters.selectedDistrict !== 'all' && item.district !== filters.selectedDistrict) return false;
         if (filters.selectedSchool !== 'all' && item.schoolName !== filters.selectedSchool) return false;
         return true;
       });
 
       // Sum up counts
-      const regKey = `regG${gNum}` as keyof typeof registrationData[0];
-      const partKey = `partG${gNum}` as keyof typeof registrationData[0];
-
-      const totalReg = relevantData.reduce((sum, item) => sum + (item[regKey] as number || 0), 0);
-      const totalPart = relevantData.reduce((sum, item) => sum + (item[partKey] as number || 0), 0);
+      const totalReg = relevantData.reduce((sum, item) => sum + (item.registered[gNum - 1] || 0), 0);
+      const totalPart = relevantData.reduce((sum, item) => sum + (item.participated[gNum - 1] || 0), 0);
 
       return {
         grade: gradeKey,
@@ -315,20 +313,15 @@ const App: React.FC = () => {
               filteredSchools={filteredSchools}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-4 gap-6">
               <DashboardCard title="Total Schools" value={(filters.selectedSchool !== 'all' ? 1 : filteredSchools.length).toString()} />
               <DashboardCard title="Total Students" value={totalRegistered.toLocaleString()} />
               <DashboardCard title="Students Participated" value={totalParticipated.toLocaleString()} />
               <DashboardCard title="Overall Participation" value={`${(totalRegistered > 0 ? (totalParticipated / totalRegistered) * 100 : 0).toFixed(1)}%`} />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1">
-                <OverallParticipation total={totalRegistered} participated={totalParticipated} />
-              </div>
-              <div className="lg:col-span-2">
-                <GradeWiseParticipationChart data={gradeWiseParticipation} />
-              </div>
+            <div className="w-full mb-6">
+              <GradeWiseParticipationChart data={gradeWiseParticipation} totalRegistered={totalRegistered} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
