@@ -129,9 +129,29 @@ const App: React.FC = () => {
     }
 
     // Metrics
-    // Assumption: Every record in the excel is a registered student who participated.
-    const totalRegistered = tempFilteredStudentDetails.length;
-    const totalParticipated = tempFilteredStudentDetails.length; // Or filter by some criteria if needed
+    // Update: Calculate totalRegistered from registrationData.ts
+    let totalRegistered = 0;
+
+    // Filter registrationData based on district and school
+    const relevantRegistrationData = registrationData.filter(item => {
+      if (item.schoolName === 'Total') return false;
+      if (filters.selectedDistrict !== 'all' && item.district !== filters.selectedDistrict) return false;
+      if (filters.selectedSchool !== 'all' && item.schoolName !== filters.selectedSchool) return false;
+      return true;
+    });
+
+    if (filters.selectedGrade === 'all') {
+      totalRegistered = relevantRegistrationData.reduce((sum, item) => sum + item.totalRegistered, 0);
+    } else {
+      // Extract number from selected grade string e.g. "Grade 1" -> 1
+      const m = filters.selectedGrade.match(/\d+/);
+      const selectedNum = m ? parseInt(m[0], 10) : -1;
+      if (selectedNum !== -1) {
+        totalRegistered = relevantRegistrationData.reduce((sum, item) => sum + (item.registered[selectedNum - 1] || 0), 0);
+      }
+    }
+
+    const totalParticipated = tempFilteredStudentDetails.length;
 
     // Filtered Schools for Dropdown (dependent on district selection)
     let filteredSchools = schools;
@@ -194,7 +214,7 @@ const App: React.FC = () => {
 
       // Parse Level
       const levelStr = level.trim();
-      if (levelStr === 'At Level' || levelStr === 'Level 0') return 0;
+      if (levelStr === 'At Level') return 0;
 
       if (levelStr.startsWith('Level')) {
         const levelMatch = levelStr.match(/\d+/);
@@ -212,7 +232,21 @@ const App: React.FC = () => {
       const gapCounts = new Map<number, number>();
 
       tempFilteredStudentDetails.forEach(student => {
-        const gap = calculateGap(student.grade, student[levelField]);
+        let gap = calculateGap(student.grade, student[levelField]);
+
+        // Apply logic: Max Years Below = Grade - 1
+        if (gap !== null && gap < 0) {
+          const gradeMatch = student.grade.toString().match(/\d+/);
+          const gradeNum = gradeMatch ? parseInt(gradeMatch[0], 10) : null;
+
+          if (gradeNum !== null && gradeNum > 0) {
+            const maxBelow = gradeNum - 1;
+            if (Math.abs(gap) > maxBelow) {
+              gap = -maxBelow;
+            }
+          }
+        }
+
         if (gap !== null) {
           gapCounts.set(gap, (gapCounts.get(gap) || 0) + 1);
         }
@@ -315,7 +349,7 @@ const App: React.FC = () => {
 
             <div className="grid grid-cols-4 gap-6">
               <DashboardCard title="Total Schools" value={(filters.selectedSchool !== 'all' ? 1 : filteredSchools.length).toString()} />
-              <DashboardCard title="Total Students" value={totalRegistered.toLocaleString()} />
+              <DashboardCard title="Total Registered Students" value={totalRegistered.toLocaleString()} />
               <DashboardCard title="Students Participated" value={totalParticipated.toLocaleString()} />
               <DashboardCard title="Overall Participation" value={`${(totalRegistered > 0 ? (totalParticipated / totalRegistered) * 100 : 0).toFixed(1)}%`} />
             </div>
