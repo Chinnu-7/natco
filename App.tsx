@@ -9,12 +9,14 @@ import { GapToGradeChart } from './components/GapToGradeChart';
 import { StudentDetailsTable } from './components/StudentDetailsTable';
 import { SchoolWisePerformanceTable } from './components/SchoolWisePerformanceTable';
 import { ExcelUploader } from './components/ExcelUploader';
+import { LoginPage } from './components/LoginPage';
 import type { DataFilters, School, GradeWiseParticipation, GapToGradeData, SchoolPerformance, StudentDetail, District, Grade } from './types';
 // @ts-ignore
 import excelFileUrl from './Final_Grade_Extraction.xlsx?url';
 import { registrationData } from './registrationData';
 
 const App: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [filters, setFilters] = useState<DataFilters>({
     selectedDistrict: 'all',
     selectedSchool: 'all',
@@ -221,7 +223,26 @@ const App: React.FC = () => {
         const levelNum = levelMatch ? parseInt(levelMatch[0], 10) : null;
 
         if (levelNum !== null) {
-          return levelNum - gradeNum;
+          // Logic Update: For Grades 8, 9, 10, treat as Grade 7
+          const effectiveGrade = gradeNum >= 8 ? 7 : gradeNum;
+
+          let gap = levelNum - effectiveGrade;
+
+          // Apply logic: Max Years Below
+          // Standard: Grade - 1
+          // Grade 1: 1 Year Below (Level 0) -> Gap -1
+          // Grade 7 (and 8,9,10): Allow down to Level 0 -> Gap -7
+          if (gap < 0 && effectiveGrade > 0) {
+            let maxBelow = effectiveGrade - 1;
+
+            if (effectiveGrade === 1) maxBelow = 1;
+            if (effectiveGrade === 7) maxBelow = 7; // Allow Level 0 for Grade 7 (and 8,9,10)
+
+            if (Math.abs(gap) > maxBelow) {
+              gap = -maxBelow;
+            }
+          }
+          return gap;
         }
       }
 
@@ -233,19 +254,6 @@ const App: React.FC = () => {
 
       tempFilteredStudentDetails.forEach(student => {
         let gap = calculateGap(student.grade, student[levelField]);
-
-        // Apply logic: Max Years Below = Grade - 1
-        if (gap !== null && gap < 0) {
-          const gradeMatch = student.grade.toString().match(/\d+/);
-          const gradeNum = gradeMatch ? parseInt(gradeMatch[0], 10) : null;
-
-          if (gradeNum !== null && gradeNum > 0) {
-            const maxBelow = gradeNum - 1;
-            if (Math.abs(gap) > maxBelow) {
-              gap = -maxBelow;
-            }
-          }
-        }
 
         if (gap !== null) {
           gapCounts.set(gap, (gapCounts.get(gap) || 0) + 1);
@@ -300,15 +308,35 @@ const App: React.FC = () => {
       agg.mathScore += getScore(s.grade, s.mathLevel);
     });
 
-    const schoolPerformanceData: SchoolPerformance[] = Array.from(schoolAggregates.entries()).map(([schoolName, data]) => ({
-      schoolName,
-      districtName: data.district,
-      totalRegistered: data.total,
-      totalParticipated: data.total,
-      participationRate: 100,
-      avgEnglishPerformance: data.total > 0 ? parseFloat((data.englishScore / data.total).toFixed(2)) : 0,
-      avgMathPerformance: data.total > 0 ? parseFloat((data.mathScore / data.total).toFixed(2)) : 0,
-    }));
+    const schoolPerformanceData: SchoolPerformance[] = Array.from(schoolAggregates.entries()).map(([schoolName, data]) => {
+      // Find registration data for this school
+      const regData = registrationData.find(r => r.schoolName === schoolName);
+      let schoolRegistered = 0;
+
+      if (regData) {
+        if (filters.selectedGrade !== 'all') {
+          const m = filters.selectedGrade.match(/\d+/);
+          const gNum = m ? parseInt(m[0], 10) : -1;
+          if (gNum !== -1) {
+            schoolRegistered = regData.registered[gNum - 1] || 0;
+          }
+        } else {
+          schoolRegistered = regData.totalRegistered;
+        }
+      }
+
+      const participationRate = schoolRegistered > 0 ? (data.total / schoolRegistered) * 100 : 0;
+
+      return {
+        schoolName,
+        districtName: data.district,
+        totalRegistered: schoolRegistered,
+        totalParticipated: data.total,
+        participationRate,
+        avgEnglishPerformance: data.total > 0 ? parseFloat((data.englishScore / data.total).toFixed(2)) : 0,
+        avgMathPerformance: data.total > 0 ? parseFloat((data.mathScore / data.total).toFixed(2)) : 0,
+      };
+    });
 
     return {
       districts,
@@ -325,13 +353,17 @@ const App: React.FC = () => {
     };
   }, [allStudentDetails, filters, searchTerm]);
 
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={() => setIsAuthenticated(true)} />;
+  }
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">Loading data...</div>;
   }
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Header />
+      <Header onLogout={() => setIsAuthenticated(false)} />
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="space-y-6">
